@@ -13,49 +13,53 @@ from xsbs.players import masterRequired, adminRequired, player, currentAdmin
 
 import os
 import urllib
+import tarfile
+import string
+
 config = {
 	'Main': {
 		'enable': 'yes',
 		'repo': 'http://github.com/harrythedevman/XSBS-plugins/',
-		'list': 'http://github.com/harrythedevman/XSBS-plugins/blob/master/list'
+		'list': 'http://github.com/harrythedevman/XSBS-plugins/raw/master/list'
 		}
 	}
 
 class Install:
 	def __init__(self):
-		self.pluginList = []
+		self.pluginDict = {}
 		self.pyscriptsDir = os.getcwd()
-		self.downloadDir = os.path.abspath(self.pyscriptsDir + "/plugins/installer/downloads")
-		self.pluginsDir = os.path.abspath(self.pyscriptsDir + "/plugins")
-	
+		self.downloadDir = os.path.abspath(self.pyscriptsDir + "/plugins/installer/downloads/") + '/'
+		self.pluginsDir = os.path.abspath(self.pyscriptsDir + "/plugins/") + '/'
+
 	def getPluginList(self):
 		path = self.download(config['Main']['list'])
 		file = open(path, 'r')
 		for line in file.readlines():
-			self.pluginList.append(line.strip('\n'))
-		os.remove(path)
+			line = line.split("#")
+			self.pluginDict[line[0]] = line[1]
+		#os.remove(path)
 		
 	def download(self, url):
 		file = url.split('/')[-1]
-		urllib.urlretrieve(url, self.downloadDir + "/" + file)
-		return os.path.abspath(self.downloadDir + "/" + file)
+		urllib.urlretrieve(url, self.downloadDir + file)
+		return os.path.abspath(self.downloadDir + file)
 	
 	def fetch(self, name):
-		return self.download(config['Main']['repo'] + name + ".tar.gz")
+		return self.download(self.pluginDict[name])
 		
 	def install(self, name):
 		file = self.fetch(name)
 		tf = tarfile.open(file)
-		tf.extractall(self.downloadDir + "/" + name)
-		installFile = self.downloadDir + "/" + name + "/install"
-		moves = parseINSTALL(installFile)
+		tf.extractall(self.downloadDir)
+		installFile = self.downloadDir + '/' + name + "/install"
+		moves = self.parseInstall(installFile)
 		for k, v in moves.iteritems():
-			os.rename(self.downloadDir + "/" + name + "/" + k , v + k)
+			os.rename(self.downloadDir + name + "/" + k , v + k)
 			
-	def parseINSTALL(self, file):
+	def parseInstall(self, file):
 		paths = {'plugin_dir': self.pluginsDir, 'pyscripts_dir': self.pyscriptsDir}
 		moves = {}
-		for line in file.readlines():
+		for line in open(file, 'r').readlines():
 			line = string.Template(line)
 			line = line.substitute(paths)
 			line = line.split(':')
@@ -72,7 +76,7 @@ def onInstallCmd(cn, args):
 	plugin = args
 	installer = Install()
 	installer.getPluginList()
-	if plugin in installer.pluginList:
+	if plugin in installer.pluginDict:
 		#p.message(info("Plugin found. Downloading now."))
 		print 1
 		installer.fetch(plugin)

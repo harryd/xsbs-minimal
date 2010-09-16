@@ -17,7 +17,7 @@ import tarfile
 import string
 
 config = {
-	'Main': {
+        'Main': {
 		'enable': 'yes',
 		'repo': 'http://github.com/harrythedevman/XSBS-plugins/',
 		'list': 'http://github.com/harrythedevman/XSBS-plugins/raw/master/list'
@@ -37,7 +37,7 @@ class Install:
 		for line in file.readlines():
 			line = line.split("#")
 			self.pluginDict[line[0]] = line[1]
-		#os.remove(path)
+		os.remove(path)
 		
 	def download(self, url):
 		file = url.split('/')[-1]
@@ -72,21 +72,20 @@ def onInstallCmd(cn, args):
 	'''@description Install server plugins
 	   @usage <plugin>
 	   @admin'''
-	#p = player(cn)
+	p = player(cn)
 	plugin = args
 	installer = Install()
 	installer.getPluginList()
 	if plugin in installer.pluginDict:
-		#p.message(info("Plugin found. Downloading now."))
+		p.message(info("Plugin found. Downloading now."))
 		print 1
 		installer.fetch(plugin)
-		#p.message(info("Plugin downloaded. Installing now."))
+		p.message(info("Plugin downloaded. Installing now."))
 		print 2
 		installer.install(plugin)
-		#p.message(info("Plugin Installed."))
-		print 3
+		p.message(info("Plugin Installed."))
 	else:
-		#p.message(info("Plugin \"%s\" not found." % plugin))
+		p.message(info("Plugin \"%s\" not found." % plugin))
 		return
 	   
 def init():
